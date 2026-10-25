@@ -4,6 +4,7 @@ import { Link, Stack } from "expo-router";
 import { useRef, useState } from "react";
 import {
   FlatList,
+  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -17,6 +18,27 @@ import {
 import { getMemos, shareMemo, type Memo } from "../storage/memos";
 
 const LABEL = { word: "言葉", phrase: "メモ", tip: "Tips" };
+// ページの og:image を端末から直接取りに行く。取れなければ null
+// ponytail: 起動ごとに取り直す。重くなったら API 側で保存時に取って urls と一緒に持つ
+async function getOgImage(url: string) {
+  const html = await (await fetch(url)).text();
+  const tag = html.match(/<meta[^>]+(?:property|name)=["']og:image["'][^>]*>/i)?.[0];
+  const src = tag?.match(/content=["']([^"']+)["']/i)?.[1];
+  return src ? new URL(src.replace(/&amp;/g, "&"), url).href : null;
+}
+
+function LinkRow({ url }: { url: string }) {
+  const { data: image } = useQuery({ queryKey: ["og", url], queryFn: () => getOgImage(url), staleTime: Infinity, retry: false });
+  return (
+    <Pressable style={styles.linkRow} onPress={() => Linking.openURL(url)}>
+      {image && <Image source={{ uri: image }} style={styles.thumb} />}
+      <Text style={styles.link} numberOfLines={1}>
+        <Ionicons name="link-outline" size={13} /> {url.replace(/^https?:\/\//, "")}
+      </Text>
+    </Pressable>
+  );
+}
+
 // タブの順 = スワイプのページの順
 const FILTERS = [
   ["すべて", "grid-outline", () => true, "まだメモはありません"],
@@ -132,11 +154,7 @@ export default function Home() {
                   </View>
                   {item.kind === "word" && <Text style={styles.word}>{item.word}</Text>}
                   <Text style={item.kind === "word" ? styles.description : styles.phrase}>{item.description}</Text>
-                  {item.urls?.map((u, i) => (
-                    <Text key={i} style={styles.link} numberOfLines={1} onPress={() => Linking.openURL(u)}>
-                      <Ionicons name="link-outline" size={13} /> {u.replace(/^https?:\/\//, "")}
-                    </Text>
-                  ))}
+                  {item.urls?.map((u, i) => <LinkRow key={i} url={u} />)}
                 </Pressable>
               </Link>
             )}
@@ -340,6 +358,16 @@ const styles = StyleSheet.create({
   phrase: {
     fontSize: 16,
     color: "#192543",
+  },
+  linkRow: {
+    gap: 6,
+  },
+  // OGP 画像の標準比率 1.91:1
+  thumb: {
+    width: "100%",
+    aspectRatio: 1.91,
+    borderRadius: 8,
+    backgroundColor: "#f2f2f2",
   },
   link: {
     fontSize: 13,
