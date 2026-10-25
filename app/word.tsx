@@ -18,9 +18,7 @@ export default function WordScreen() {
   const [word, setWord] = useState(memo?.word ?? "");
   const [description, setDescription] = useState(memo?.description ?? "");
   const [urls, setUrls] = useState(memo?.urls ?? []);
-  // メモ（phrase）は自分の考えなので参照リンクを持たない
-  const hasLinks = kind !== "phrase";
-  const links = hasLinks ? urls.map((u) => u.trim()).filter(Boolean) : [];
+  const links = urls.map((u) => u.trim()).filter(Boolean);
   const canSave = (!isWord || !!word.trim()) && !!description.trim() && links.every((u) => /^https?:\/\/\S+$/.test(u));
   const onError = (e: Error) => Alert.alert("エラー", e.message);
   const done = () => {
@@ -89,7 +87,7 @@ export default function WordScreen() {
         autoFocus={!memo && !isWord}
         multiline
       />
-      {hasLinks && urls.map((u, i) => (
+      {urls.map((u, i) => (
         <View key={i} style={styles.urlRow}>
           <Ionicons name="link-outline" size={18} color="#999" />
           <TextInput
@@ -108,7 +106,7 @@ export default function WordScreen() {
           </Pressable>
         </View>
       ))}
-      {hasLinks && urls.length < 10 && (
+      {urls.length < 10 && (
         <Pressable style={styles.urlRow} onPress={() => setUrls([...urls, ""])}>
           <Ionicons name="add" size={18} color="#192543" />
           <Text style={styles.addLink}>参照リンクを追加</Text>
