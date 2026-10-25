@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { track } from "../storage/analytics";
-import { addMemo, deleteMemo, updateMemo, type Memo } from "../storage/memos";
+import { addMemo, deleteMemo, shareMemo, updateMemo, type Memo } from "../storage/memos";
 
 // 全画面の入力画面。id があれば編集、なければ kind で新規
 export default function WordScreen() {
@@ -13,18 +13,22 @@ export default function WordScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const memo = queryClient.getQueryData<Memo[]>(["memos"])?.find((m) => m.id === params.id);
-  const kind = memo?.kind ?? (params.kind === "phrase" ? "phrase" : "word");
+  const kind = memo?.kind ?? (params.kind === "phrase" || params.kind === "tip" ? params.kind : "word");
   const isWord = kind === "word";
   const [word, setWord] = useState(memo?.word ?? "");
   const [description, setDescription] = useState(memo?.description ?? "");
-  const canSave = (!isWord || !!word.trim()) && !!description.trim();
+  const [urls, setUrls] = useState(memo?.urls ?? []);
+  // メモ（phrase）は自分の考えなので参照リンクを持たない
+  const hasLinks = kind !== "phrase";
+  const links = hasLinks ? urls.map((u) => u.trim()).filter(Boolean) : [];
+  const canSave = (!isWord || !!word.trim()) && !!description.trim() && links.every((u) => /^https?:\/\/\S+$/.test(u));
   const onError = (e: Error) => Alert.alert("エラー", e.message);
   const done = () => {
     queryClient.invalidateQueries({ queryKey: ["memos"] });
     router.back();
   };
   const save = useMutation({
-    mutationFn: async (input: Pick<Memo, "kind" | "word" | "description">) => {
+    mutationFn: async (input: Pick<Memo, "kind" | "word" | "description" | "urls">) => {
       await (memo ? updateMemo({ id: memo.id, ...input }) : addMemo(input));
     },
     onSuccess: () => {
@@ -43,7 +47,7 @@ export default function WordScreen() {
   });
 
   const onSave = () => {
-    if (canSave) save.mutate({ kind, word: isWord ? word.trim() : "", description: description.trim() });
+    if (canSave) save.mutate({ kind, word: isWord ? word.trim() : "", description: description.trim(), urls: links });
   };
   const confirmDelete = () =>
     Alert.alert(isWord ? "この言葉を削除しますか？" : "このメモを削除しますか？", "元に戻すことはできません。", [
@@ -57,7 +61,7 @@ export default function WordScreen() {
         <Pressable style={styles.close} onPress={() => router.back()} accessibilityLabel="閉じる">
           <Ionicons name="close" size={26} color="#333" />
         </Pressable>
-        <Text style={styles.title}>{memo ? "編集する" : isWord ? "言葉を書く" : "言い回しを書く"}</Text>
+        <Text style={styles.title}>{memo ? "編集する" : isWord ? "言葉を書く" : kind === "tip" ? "Tipsを書く" : "メモを書く"}</Text>
         <Pressable
           style={[styles.save, !canSave && styles.saveDisabled]}
           onPress={onSave}
@@ -80,11 +84,41 @@ export default function WordScreen() {
         style={styles.body}
         value={description}
         onChangeText={setDescription}
-        placeholder={isWord ? "どういう意味？" : "共感した言い回しや考え"}
+        placeholder={isWord ? "どういう意味？" : kind === "tip" ? "知っておくと便利なこと" : "思ったことや考え"}
         placeholderTextColor="#aaa"
         autoFocus={!memo && !isWord}
         multiline
       />
+      {hasLinks && urls.map((u, i) => (
+        <View key={i} style={styles.urlRow}>
+          <Ionicons name="link-outline" size={18} color="#999" />
+          <TextInput
+            style={styles.url}
+            value={u}
+            onChangeText={(v) => setUrls(urls.map((x, j) => (j === i ? v : x)))}
+            placeholder="https://"
+            placeholderTextColor="#aaa"
+            keyboardType="url"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus={!u}
+          />
+          <Pressable onPress={() => setUrls(urls.filter((_, j) => j !== i))} accessibilityLabel="リンクを削除">
+            <Ionicons name="close-circle" size={20} color="#bbb" />
+          </Pressable>
+        </View>
+      ))}
+      {hasLinks && urls.length < 10 && (
+        <Pressable style={styles.urlRow} onPress={() => setUrls([...urls, ""])}>
+          <Ionicons name="add" size={18} color="#192543" />
+          <Text style={styles.addLink}>参照リンクを追加</Text>
+        </Pressable>
+      )}
+      {memo && (
+        <Pressable style={styles.delete} onPress={() => shareMemo(memo)}>
+          <Text style={styles.shareText}>共有</Text>
+        </Pressable>
+      )}
       {memo && (
         <Pressable style={styles.delete} onPress={confirmDelete} disabled={remove.isPending}>
           <Text style={styles.deleteText}>削除</Text>
@@ -153,9 +187,31 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     textAlignVertical: "top",
   },
+  urlRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#ddd",
+  },
+  addLink: {
+    fontSize: 15,
+    paddingVertical: 12,
+    color: "#192543",
+  },
+  url: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 12,
+    color: "#192543",
+  },
   delete: {
     alignItems: "center",
     paddingVertical: 12,
+  },
+  shareText: {
+    color: "#192543",
+    fontSize: 16,
   },
   deleteText: {
     color: "#C0392B",

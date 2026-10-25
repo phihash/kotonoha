@@ -5,7 +5,8 @@ import { Sheet, useSheet } from "../components/Sheet";
 
 const KINDS = [
   ["word", "言葉を書く", "book-outline"],
-  ["phrase", "言い回しを書く", "chatbubble-ellipses-outline"],
+  ["phrase", "メモを書く", "chatbubble-ellipses-outline"],
+  ["tip", "Tipsを書く", "bulb-outline"],
 ] as const;
 
 // ＋ で開くメニュー。選ぶとシートを閉じて入力画面へ
