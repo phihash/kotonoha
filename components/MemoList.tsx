@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, Stack } from "expo-router";
+import { Link, type Href } from "expo-router";
 import { useRef, useState } from "react";
 import {
   FlatList,
@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { getMemos, shareMemo, type Memo } from "../storage/memos";
 
-const LABEL = { word: "言葉", phrase: "メモ", tip: "Tips" };
+const LABEL = { word: "言葉", phrase: "メモ", tip: "Tips", want: "やりたい" };
 // ページの og:image を端末から直接取りに行く。取れなければ null
 // ponytail: 起動ごとに取り直す。重くなったら API 側で保存時に取って urls と一緒に持つ
 async function getOgImage(url: string) {
@@ -39,17 +39,12 @@ function LinkRow({ url }: { url: string }) {
   );
 }
 
-// タブの順 = スワイプのページの順
-const FILTERS = [
-  ["すべて", "grid-outline", () => true, "まだメモはありません"],
-  ["言葉", "book-outline", (m: Memo) => m.kind === "word", "言葉はまだありません"],
-  ["メモ", "chatbubble-ellipses-outline", (m: Memo) => m.kind === "phrase", "メモはまだありません"],
-  ["Tips", "bulb-outline", (m: Memo) => m.kind === "tip", "Tipsはまだありません"],
-  ["リンクあり", "link-outline", (m: Memo) => !!m.urls?.length, "リンクのあるメモはまだありません"],
-] as const;
+// [タブ名, アイコン, 絞り込み, 空のときの文]。並びの順 = スワイプのページの順
+export type Filter = readonly [string, keyof typeof Ionicons.glyphMap, (m: Memo) => boolean, string];
 const SORTS = ["作成日時（新しい順）", "作成日時（古い順）", "最新更新日時順"] as const;
 
-export default function Home() {
+// ボトムタブの各画面で使う一覧。filters で何を出すか、add で＋の行き先を決める
+export function MemoList({ filters, add }: { filters: readonly Filter[]; add: Href }) {
   const [page, setPage] = useState(0);
   const { width } = useWindowDimensions();
   const pager = useRef<ScrollViewInstance>(null);
@@ -84,21 +79,10 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Link href="/settings" asChild>
-              <Pressable accessibilityLabel="設定">
-                <Ionicons name="settings-outline" size={24} color="#192543" />
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
       <View style={styles.bar}>
         {/* 並び替え以外は横にスクロールさせ、狭い画面でもはみ出さないようにする */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills}>
-          {FILTERS.map(([label, icon], i) => {
+          {filters.map(([label, icon], i) => {
             const active = page === i;
             return (
               <Pressable key={label} style={[styles.pill, active && styles.pillActive]} onPress={() => showPage(i)}>
@@ -120,7 +104,7 @@ export default function Home() {
             style={styles.searchInput}
             value={query}
             onChangeText={setQuery}
-            placeholder="言葉やメモを検索"
+            placeholder="検索"
             placeholderTextColor="#aaa"
             autoFocus
             returnKeyType="search"
@@ -136,7 +120,7 @@ export default function Home() {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
       >
-        {FILTERS.map(([label, , test, empty]) => (
+        {filters.map(([label, , test, empty]) => (
           <FlatList
             key={label}
             style={{ width }}
@@ -181,7 +165,7 @@ export default function Home() {
       >
         <Ionicons name={searchOpen ? "close" : "search"} size={24} color="#192543" />
       </Pressable>
-      <Link href="/new" asChild>
+      <Link href={add} asChild>
         <Pressable style={styles.fab} accessibilityLabel="追加">
           <Ionicons name="add" size={32} color="#F2E8D9" />
         </Pressable>

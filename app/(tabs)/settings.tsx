@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { track } from "../storage/analytics";
-import { deleteAccount, getUser, signOut } from "../storage/auth";
+import { track } from "../../storage/analytics";
+import { deleteAccount, getUser, signOut } from "../../storage/auth";
 
 export default function Settings() {
   const queryClient = useQueryClient();

@@ -11,8 +11,7 @@ function RootStack() {
 
   return (
     <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
-      <Stack.Screen name="index" options={{ title: "コトノハメモ" }} />
-      <Stack.Screen name="settings" options={{ title: "設定" }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="new"
         options={{

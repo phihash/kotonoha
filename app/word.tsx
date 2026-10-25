@@ -13,7 +13,7 @@ export default function WordScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const memo = queryClient.getQueryData<Memo[]>(["memos"])?.find((m) => m.id === params.id);
-  const kind = memo?.kind ?? (params.kind === "phrase" || params.kind === "tip" ? params.kind : "word");
+  const kind = memo?.kind ?? (["phrase", "tip", "want"].includes(params.kind ?? "") ? (params.kind as Memo["kind"]) : "word");
   const isWord = kind === "word";
   const [word, setWord] = useState(memo?.word ?? "");
   const [description, setDescription] = useState(memo?.description ?? "");
@@ -59,7 +59,7 @@ export default function WordScreen() {
         <Pressable style={styles.close} onPress={() => router.back()} accessibilityLabel="閉じる">
           <Ionicons name="close" size={26} color="#333" />
         </Pressable>
-        <Text style={styles.title}>{memo ? "編集する" : isWord ? "言葉を書く" : kind === "tip" ? "Tipsを書く" : "メモを書く"}</Text>
+        <Text style={styles.title}>{memo ? "編集する" : { word: "言葉を書く", phrase: "メモを書く", tip: "Tipsを書く", want: "やりたいことを書く" }[kind]}</Text>
         <Pressable
           style={[styles.save, !canSave && styles.saveDisabled]}
           onPress={onSave}
@@ -82,7 +82,7 @@ export default function WordScreen() {
         style={styles.body}
         value={description}
         onChangeText={setDescription}
-        placeholder={isWord ? "どういう意味？" : kind === "tip" ? "知っておくと便利なこと" : "思ったことや考え"}
+        placeholder={{ word: "どういう意味？", phrase: "思ったことや考え", tip: "知っておくと便利なこと", want: "行きたいお店、買いたい本など" }[kind]}
         placeholderTextColor="#aaa"
         autoFocus={!memo && !isWord}
         multiline
