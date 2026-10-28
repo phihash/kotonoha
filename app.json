@@ -18,7 +18,7 @@
     "ios": {
       "bundleIdentifier": "net.phihash.kotonoha",
       "usesAppleSignIn": true,
-      "buildNumber": "2",
+      "buildNumber": "3",
       "appleTeamId": "XVM4X7JGBU",
       "runtimeVersion": {
         "policy": "appVersion"
@@ -35,9 +35,20 @@
         }
       ],
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true
+          },
+          "disableAndroid": true
+        }
+      ]
     ],
-    "version": "1.0.0",
+    "version": "1.1.0",
     "extra": {
       "eas": {
         "projectId": "d0676cf2-f2bc-4eb3-87f6-e513c5865e07"

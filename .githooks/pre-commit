@@ -1,0 +1,9 @@
+#!/bin/sh
+# コミット前に、ステージした差分へ秘密情報(APIキー・トークン等)が混ざっていないか Betterleaks で確かめる。
+# Xcode等のGUIからのコミットはログインシェルのPATHを持たないので Homebrew の場所を足す
+export PATH="/opt/homebrew/bin:$PATH"
+if ! command -v betterleaks >/dev/null 2>&1; then
+  echo "betterleaks が見つかりません: brew install betterleaks" >&2
+  exit 1
+fi
+exec betterleaks git --pre-commit --staged --redact --no-banner
