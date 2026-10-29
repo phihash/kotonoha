@@ -43,14 +43,13 @@ function LinkRow({ url }: { url: string }) {
 export type Filter = readonly [string, keyof typeof Ionicons.glyphMap, (m: Memo) => boolean, string];
 const SORTS = ["作成日時（新しい順）", "作成日時（古い順）", "最新更新日時順"] as const;
 
-// ボトムタブの各画面で使う一覧。filters で何を出すか、add で＋の行き先を決める
-export function MemoList({ filters, add }: { filters: readonly Filter[]; add: Href }) {
+// ボトムタブの各画面で使う一覧。filters で何を出すか、add で＋の行き先、search で検索欄を出すかを決める
+export function MemoList({ filters, add, search }: { filters: readonly Filter[]; add?: Href; search?: boolean }) {
   const [page, setPage] = useState(0);
   const { width } = useWindowDimensions();
   const pager = useRef<ScrollViewInstance>(null);
   const [sort, setSort] = useState<(typeof SORTS)[number]>(SORTS[0]);
   const [sortOpen, setSortOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const {
     data: memos = [],
@@ -97,7 +96,7 @@ export function MemoList({ filters, add }: { filters: readonly Filter[]; add: Hr
           <Ionicons name={sortOpen ? "chevron-up" : "chevron-down"} size={14} color="#192543" />
         </Pressable>
       </View>
-      {searchOpen && (
+      {search && (
         <View style={styles.search}>
           <Ionicons name="search" size={18} color="#999" />
           <TextInput
@@ -155,21 +154,13 @@ export function MemoList({ filters, add }: { filters: readonly Filter[]; add: Hr
           />
         ))}
       </ScrollView>
-      <Pressable
-        style={[styles.fab, styles.searchFab]}
-        onPress={() => {
-          setSearchOpen(!searchOpen);
-          setQuery("");
-        }}
-        accessibilityLabel={searchOpen ? "検索を閉じる" : "検索"}
-      >
-        <Ionicons name={searchOpen ? "close" : "search"} size={24} color="#192543" />
-      </Pressable>
-      <Link href={add} asChild>
-        <Pressable style={styles.fab} accessibilityLabel="追加">
-          <Ionicons name="add" size={32} color="#F2E8D9" />
-        </Pressable>
-      </Link>
+      {add && (
+        <Link href={add} asChild>
+          <Pressable style={styles.fab} accessibilityLabel="追加">
+            <Ionicons name="add" size={32} color="#F2E8D9" />
+          </Pressable>
+        </Link>
+      )}
       {/* 並び替えのドロップダウン。外側をタップで閉じる */}
       {sortOpen && (
         <>
@@ -280,14 +271,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 6,
-  },
-  searchFab: {
-    right: 96,
-    bottom: 44,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#fff",
   },
   search: {
     flexDirection: "row",

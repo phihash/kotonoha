@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import { ShareIntentProvider } from "expo-share-intent";
 import "../storage/analytics";
 import { getUser } from "../storage/auth";
 
@@ -33,8 +34,10 @@ function RootStack() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RootStack />
-    </QueryClientProvider>
+    <ShareIntentProvider>
+      <QueryClientProvider client={queryClient}>
+        <RootStack />
+      </QueryClientProvider>
+    </ShareIntentProvider>
   );
 }

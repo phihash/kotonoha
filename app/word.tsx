@@ -7,17 +7,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { track } from "../storage/analytics";
 import { addMemo, deleteMemo, shareMemo, updateMemo, type Memo } from "../storage/memos";
 
+const KINDS = [
+  ["phrase", "メモ"],
+  ["tip", "Tips"],
+  ["want", "やりたいこと"],
+] as const;
+
 // 全画面の入力画面。id があれば編集、なければ kind で新規
 export default function WordScreen() {
-  const params = useLocalSearchParams<{ id?: string; kind?: string }>();
+  const params = useLocalSearchParams<{ id?: string; kind?: string; url?: string; text?: string }>();
   const { top, bottom } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const memo = queryClient.getQueryData<Memo[]>(["memos"])?.find((m) => m.id === params.id);
-  const kind = memo?.kind ?? (["phrase", "tip", "want"].includes(params.kind ?? "") ? (params.kind as Memo["kind"]) : "word");
+  const [kind, setKind] = useState<Memo["kind"]>(
+    memo?.kind ?? (["phrase", "tip", "want"].includes(params.kind ?? "") ? (params.kind as Memo["kind"]) : "word"),
+  );
   const isWord = kind === "word";
   const [word, setWord] = useState(memo?.word ?? "");
-  const [description, setDescription] = useState(memo?.description ?? "");
-  const [urls, setUrls] = useState(memo?.urls ?? []);
+  const [description, setDescription] = useState(memo?.description ?? params.text ?? "");
+  const [urls, setUrls] = useState(memo?.urls ?? (params.url ? [params.url] : []));
   const links = urls.map((u) => u.trim()).filter(Boolean);
   const canSave = (!isWord || !!word.trim()) && !!description.trim() && links.every((u) => /^https?:\/\/\S+$/.test(u));
   const onError = (e: Error) => Alert.alert("エラー", e.message);
@@ -68,6 +76,16 @@ export default function WordScreen() {
           <Text style={[styles.saveText, !canSave && styles.saveTextDisabled]}>保存</Text>
         </Pressable>
       </View>
+      {/* 言葉以外は同じフォームなので、あとから種類を変えられる */}
+      {(memo || params.url) && !isWord && (
+        <View style={styles.kinds}>
+          {KINDS.map(([value, label]) => (
+            <Pressable key={value} style={[styles.kind, kind === value && styles.kindActive]} onPress={() => setKind(value)}>
+              <Text style={[styles.kindText, kind === value && styles.kindTextActive]}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       {isWord && (
         <TextInput
           style={styles.word}
@@ -169,6 +187,28 @@ const styles = StyleSheet.create({
   },
   saveTextDisabled: {
     color: "#bbb",
+  },
+  kinds: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  kind: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#f2f2f2",
+  },
+  kindActive: {
+    backgroundColor: "#192543",
+  },
+  kindText: {
+    fontSize: 14,
+    color: "#192543",
+  },
+  kindTextActive: {
+    color: "#F2E8D9",
+    fontWeight: "bold",
   },
   word: {
     fontSize: 22,
