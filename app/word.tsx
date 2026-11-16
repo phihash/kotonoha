@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { track } from "../storage/analytics";
-import { addMemo, deleteMemo, MAX, shareMemo, updateMemo, type Memo } from "../storage/memos";
+import { addMemo, deleteMemo, shareMemo, updateMemo, type Memo } from "../storage/memos";
 import { colors, space, radius, fontSize, lineHeight, fontWeight } from "../components/theme";
 
 // 全画面の入力画面。id があれば編集、なければ新規
@@ -73,7 +73,6 @@ export default function WordScreen() {
         onChangeText={setWord}
         placeholder="タイトル"
         maxLength={100}
-        maxLength={MAX.word}
         placeholderTextColor={colors.placeholder}
         autoFocus={!memo}
       />
@@ -84,7 +83,6 @@ export default function WordScreen() {
         placeholder="本文"
         // kotonoha-api の上限と同じ
         maxLength={2000}
-        maxLength={MAX.description}
         placeholderTextColor={colors.placeholder}
         multiline
       />

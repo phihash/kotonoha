@@ -15,9 +15,6 @@ export type Memo = {
 
 type Input = Pick<Memo, "word" | "description" | "urls">;
 
-// 文字数の上限。kotonoha-api の検証と同じ値にする
-export const MAX = { word: 100, description: 3000 };
-
 // サインインしていない間は端末だけに保存する
 const LOCAL_KEY = "memos";
 const readLocal = async (): Promise<Memo[]> => JSON.parse((await AsyncStorage.getItem(LOCAL_KEY)) ?? "[]");
