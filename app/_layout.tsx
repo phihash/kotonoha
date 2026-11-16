@@ -14,7 +14,7 @@ function RootStack() {
   if (isPending) return null;
 
   return (
-    <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
+    <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal", headerTransparent: false }}>
       <Stack.Screen
         name="index"
         options={{
