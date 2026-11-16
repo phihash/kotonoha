@@ -21,7 +21,7 @@ UI（スタイル・色・余白・文字）を触るときは、design-system �
 # ゲート
 
 - pre-commit: betterleaks（秘密情報）
-- pre-push: `npm run lint`、`npm run check:tokens`、`npm run check:docs`（CLAUDE.md とスキルの参照が実在するか）
+- pre-push: `npm run lint`、`npm run typecheck`（存在しないトークンなど）、`npm run check:tokens`、`npm run check:docs`（CLAUDE.md とスキルの参照が実在するか）
 - フックは `.githooks/`。`npm install` の `prepare` で有効になる
 - Claude の git commit: UI の差分があると一度止まり、design-system スキルでの見直しを求められる（`.claude/hooks/design-review.sh`）
 
