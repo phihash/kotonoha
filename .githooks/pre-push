@@ -1,0 +1,4 @@
+#!/bin/sh
+# push 前に、lint(ファイル単位の決まり)とトークンの未使用チェック(ファイルをまたぐ決まり)を通す。
+export PATH="/opt/homebrew/bin:$PATH"
+npm run lint --silent && npm run check:tokens --silent && npm run check:docs --silent

@@ -25,13 +25,18 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "oxlint": "^1.94.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "oxlint",
+    "check:tokens": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-unused-tokens.mjs",
+    "check:docs": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-docs.mjs"
   },
   "private": true
 }
