@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, Text } from "react-native";
+import { colors, space, fontSize, lineHeight, fontWeight } from "../components/theme";
 
 const UPDATED = "制定日: 2026年10月18日\n改定日: 2026年10月26日";
 
@@ -88,23 +89,23 @@ export default function Legal() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
-    gap: 20,
+    padding: space[16],
+    gap: space[20],
   },
   heading: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#192543",
+    fontSize: fontSize[17],
+    fontWeight: fontWeight.bold,
+    color: colors.primary,
   },
   body: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: "#333",
+    fontSize: fontSize[15],
+    lineHeight: lineHeight[24],
+    color: colors.text,
   },
   updated: {
-    color: "#999",
+    color: colors.textMuted,
   },
 });

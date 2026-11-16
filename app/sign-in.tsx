@@ -5,6 +5,7 @@ import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import { track } from "../storage/analytics";
 import { signInWithApple } from "../storage/auth";
 import { uploadLocalMemos } from "../storage/memos";
+import { colors, space, fontSize, lineHeight, fontWeight } from "../components/theme";
 
 export default function SignIn() {
   const queryClient = useQueryClient();
@@ -54,34 +55,34 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 48,
-    backgroundColor: "#192543",
+    gap: space[48],
+    backgroundColor: colors.primary,
   },
   brand: {
     alignItems: "center",
-    gap: 16,
+    gap: space[16],
   },
   logo: {
     width: 160,
     height: 160,
   },
   title: {
-    color: "#F2E8D9",
-    fontSize: 28,
-    fontWeight: "bold",
+    color: colors.onPrimary,
+    fontSize: fontSize[28],
+    fontWeight: fontWeight.bold,
   },
   lead: {
-    color: "#F2E8D9",
-    fontSize: 14,
+    color: colors.onPrimary,
+    fontSize: fontSize[14],
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: lineHeight[22],
   },
   agree: {
-    color: "#F2E8D9",
-    fontSize: 12,
+    color: colors.onPrimary,
+    fontSize: fontSize[12],
     textAlign: "center",
-    marginHorizontal: 32,
-    marginTop: -32,
+    marginHorizontal: space[32],
+    marginTop: -space[32],
   },
   link: {
     textDecorationLine: "underline",

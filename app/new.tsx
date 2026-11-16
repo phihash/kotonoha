@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Sheet, useSheet } from "../components/Sheet";
+import { colors, space, fontSize, fontWeight } from "../components/theme";
 
 const KINDS = [
   ["word", "言葉を書く", "book-outline"],
@@ -21,7 +22,7 @@ export default function NewMenu() {
             style={styles.row}
             onPress={() => sheet.close(() => router.replace({ pathname: "/word", params: { kind } }))}
           >
-            <Ionicons name={icon} size={26} color="#192543" />
+            <Ionicons name={icon} size={26} color={colors.primary} />
             <Text style={styles.text}>{label}</Text>
           </Pressable>
         ))}
@@ -32,18 +33,18 @@ export default function NewMenu() {
 
 const styles = StyleSheet.create({
   menu: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingHorizontal: space[24],
+    paddingBottom: space[16],
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 16,
+    gap: space[16],
+    paddingVertical: space[16],
   },
   text: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#192543",
+    fontSize: fontSize[18],
+    fontWeight: fontWeight.bold,
+    color: colors.primary,
   },
 });
