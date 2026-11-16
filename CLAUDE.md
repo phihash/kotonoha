@@ -13,7 +13,7 @@ UI（スタイル・色・余白・文字）を触るときは、design-system �
 
 # 構成
 
-- `app/`: expo-router の画面。`app/(tabs)/` がタブ、`+native-intent.ts` は共有シートからの URL を振り分ける
+- `app/`: expo-router の画面。`app/index.tsx` が一覧、設定は左上から開く。`+native-intent.ts` は共有シートからの URL を振り分ける
 - `components/`: 共通 UI。デザイントークンは `components/theme.ts` だけに置く
 - `storage/`: API・認証・保存・計測。画面からは直接 fetch せず、ここを通す
 - `ios/`: Xcode 管理（ShareExtension を含む）。lint の対象外

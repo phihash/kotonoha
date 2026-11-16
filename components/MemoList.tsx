@@ -10,14 +10,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
   type ScrollViewInstance,
 } from "react-native";
 import { getMemos, shareMemo, type Memo } from "../storage/memos";
+import { colors, space, radius, fontSize, fontWeight, shadow } from "./theme";
 
-const LABEL = { word: "言葉", phrase: "メモ", tip: "Tips", want: "やりたい" };
 // ページの og:image を端末から直接取りに行く。取れなければ null
 // ponytail: 起動ごとに取り直す。重くなったら API 側で保存時に取って urls と一緒に持つ
 async function getOgImage(url: string) {
@@ -41,16 +40,12 @@ function LinkRow({ url }: { url: string }) {
 
 // [タブ名, アイコン, 絞り込み, 空のときの文]。並びの順 = スワイプのページの順
 export type Filter = readonly [string, keyof typeof Ionicons.glyphMap, (m: Memo) => boolean, string];
-const SORTS = ["作成日時（新しい順）", "作成日時（古い順）", "最新更新日時順"] as const;
 
-// ボトムタブの各画面で使う一覧。filters で何を出すか、add で＋の行き先、search で検索欄を出すかを決める
-export function MemoList({ filters, add, search }: { filters: readonly Filter[]; add?: Href; search?: boolean }) {
+// メモの一覧。filters で何を出すか、add で＋の行き先を決める
+export function MemoList({ filters, add }: { filters: readonly Filter[]; add?: Href }) {
   const [page, setPage] = useState(0);
   const { width } = useWindowDimensions();
   const pager = useRef<ScrollViewInstance>(null);
-  const [sort, setSort] = useState<(typeof SORTS)[number]>(SORTS[0]);
-  const [sortOpen, setSortOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const {
     data: memos = [],
     isPending,
@@ -60,17 +55,6 @@ export function MemoList({ filters, add, search }: { filters: readonly Filter[];
     queryKey: ["memos"],
     queryFn: getMemos,
   });
-  const q = query.trim().toLowerCase();
-  const hits = q
-    ? memos.filter((m) => [m.word, m.description, ...(m.urls ?? [])].some((t) => t.toLowerCase().includes(q)))
-    : memos;
-  // API は作成日時の新しい順で返す
-  const sorted =
-    sort === SORTS[1]
-      ? [...hits].reverse()
-      : sort === SORTS[2]
-        ? [...hits].sort((a, b) => (b.updated_at ?? b.created_at) - (a.updated_at ?? a.created_at))
-        : hits;
   const showPage = (i: number) => {
     setPage(i);
     pager.current?.scrollTo({ x: i * width });
@@ -79,38 +63,18 @@ export function MemoList({ filters, add, search }: { filters: readonly Filter[];
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
-        {/* 並び替え以外は横にスクロールさせ、狭い画面でもはみ出さないようにする */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills}>
           {filters.map(([label, icon], i) => {
             const active = page === i;
             return (
               <Pressable key={label} style={[styles.pill, active && styles.pillActive]} onPress={() => showPage(i)}>
-                <Ionicons name={icon} size={15} color={active ? "#F2E8D9" : "#192543"} />
+                <Ionicons name={icon} size={15} color={active ? colors.onPrimary : colors.primary} />
                 <Text style={[styles.pillText, active && styles.pillTextActive]}>{label}</Text>
               </Pressable>
             );
           })}
         </ScrollView>
-        <Pressable style={[styles.pill, styles.sortButton]} onPress={() => setSortOpen(!sortOpen)}>
-          <Text style={styles.pillText}>並び替え</Text>
-          <Ionicons name={sortOpen ? "chevron-up" : "chevron-down"} size={14} color="#192543" />
-        </Pressable>
       </View>
-      {search && (
-        <View style={styles.search}>
-          <Ionicons name="search" size={18} color="#999" />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="検索"
-            placeholderTextColor="#aaa"
-            autoFocus
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-          />
-        </View>
-      )}
       {/* 横スワイプでフィルターを切り替える（RN 標準の paging） */}
       <ScrollView
         ref={pager}
@@ -123,20 +87,19 @@ export function MemoList({ filters, add, search }: { filters: readonly Filter[];
           <FlatList
             key={label}
             style={{ width }}
-            data={sorted.filter(test)}
+            data={memos.filter(test)}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <Link href={{ pathname: "/word", params: { id: item.id } }} asChild>
                 <Pressable style={styles.memo}>
                   <View style={styles.meta}>
-                    <Text style={styles.chip}>{LABEL[item.kind]}</Text>
                     <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString("ja-JP")}</Text>
                     <Pressable onPress={() => shareMemo(item)} hitSlop={10} accessibilityLabel="共有">
-                      <Ionicons name="share-outline" size={16} color="#999" />
+                      <Ionicons name="share-outline" size={16} color={colors.textMuted} />
                     </Pressable>
                   </View>
-                  {item.kind === "word" && <Text style={styles.word}>{item.word}</Text>}
-                  <Text style={item.kind === "word" ? styles.description : styles.phrase}>{item.description}</Text>
+                  <Text style={[styles.word, !item.word && styles.untitled]}>{item.word || "未設定"}</Text>
+                  <Text style={styles.description}>{item.description}</Text>
                   {item.urls?.map((u, i) => <LinkRow key={i} url={u} />)}
                 </Pressable>
               </Link>
@@ -144,43 +107,22 @@ export function MemoList({ filters, add, search }: { filters: readonly Filter[];
             ListEmptyComponent={
               isPending ? undefined : (
                 <Text style={styles.empty} onPress={isError ? () => refetch() : undefined}>
-                  {q ? "見つかりませんでした" : isError ? "読み込めませんでした（タップで再読み込み）" : empty}
+                  {isError ? "読み込めませんでした（タップで再読み込み）" : empty}
                 </Text>
               )
             }
             onRefresh={refetch}
             refreshing={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 96 }}
+            contentContainerStyle={{ paddingHorizontal: space[16], paddingBottom: space[96] }}
           />
         ))}
       </ScrollView>
       {add && (
         <Link href={add} asChild>
           <Pressable style={styles.fab} accessibilityLabel="追加">
-            <Ionicons name="add" size={32} color="#F2E8D9" />
+            <Ionicons name="add" size={32} color={colors.onPrimary} />
           </Pressable>
         </Link>
-      )}
-      {/* 並び替えのドロップダウン。外側をタップで閉じる */}
-      {sortOpen && (
-        <>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSortOpen(false)} />
-          <View style={styles.dropdown}>
-            {SORTS.map((value, i) => (
-              <Pressable
-                key={value}
-                style={[styles.option, i > 0 && styles.optionBorder]}
-                onPress={() => {
-                  setSort(value);
-                  setSortOpen(false);
-                }}
-              >
-                <Text style={styles.optionText}>{value}</Text>
-                {sort === value && <Ionicons name="checkmark" size={18} color="#192543" />}
-              </Pressable>
-            ))}
-          </View>
-        </>
       )}
     </View>
   );
@@ -189,72 +131,38 @@ export function MemoList({ filters, add, search }: { filters: readonly Filter[];
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   bar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingRight: 16,
-    paddingVertical: 12,
+    gap: space[8],
+    paddingRight: space[16],
+    paddingVertical: space[12],
   },
   pills: {
-    gap: 8,
-    paddingLeft: 16,
+    gap: space[8],
+    paddingLeft: space[16],
   },
   pill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: "#f2f2f2",
+    gap: space[4],
+    paddingHorizontal: space[12],
+    paddingVertical: space[7],
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
   },
   pillActive: {
-    backgroundColor: "#192543",
+    backgroundColor: colors.primary,
   },
   pillText: {
-    fontSize: 14,
-    color: "#192543",
+    fontSize: fontSize[14],
+    color: colors.primary,
   },
   pillTextActive: {
-    color: "#F2E8D9",
-    fontWeight: "bold",
-  },
-  sortButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  dropdown: {
-    position: "absolute",
-    top: 52,
-    right: 16,
-    width: 230,
-    zIndex: 1,
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  optionBorder: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#ddd",
-  },
-  optionText: {
-    fontSize: 15,
-    color: "#192543",
+    color: colors.onPrimary,
+    fontWeight: fontWeight.bold,
   },
   fab: {
     position: "absolute",
@@ -262,36 +170,17 @@ const styles = StyleSheet.create({
     bottom: 40,
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: radius[30],
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#192543",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
-  },
-  search: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: "#f2f2f2",
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    paddingVertical: 10,
+    backgroundColor: colors.primary,
+    ...shadow.fab,
   },
   memo: {
-    paddingVertical: 12,
+    paddingVertical: space[12],
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    gap: 4,
+    borderBottomColor: colors.dividerLight,
+    gap: space[4],
   },
   meta: {
     flexDirection: "row",
@@ -300,49 +189,38 @@ const styles = StyleSheet.create({
   },
   date: {
     marginLeft: "auto",
-    marginRight: 12,
-    fontSize: 12,
-    color: "#999",
-  },
-  chip: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 999,
-    overflow: "hidden",
-    fontSize: 12,
-    color: "#192543",
-    backgroundColor: "#F2E8D9",
+    marginRight: space[12],
+    fontSize: fontSize[12],
+    color: colors.textMuted,
   },
   word: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: fontSize[18],
+    fontWeight: fontWeight.bold,
   },
   description: {
-    fontSize: 15,
-    color: "#555",
+    fontSize: fontSize[15],
+    color: colors.textSub,
   },
-  phrase: {
-    fontSize: 16,
-    color: "#192543",
+  untitled: {
+    color: colors.textMuted,
   },
   linkRow: {
-    gap: 6,
+    gap: space[6],
   },
   // OGP 画像の標準比率 1.91:1
   thumb: {
     width: "100%",
     aspectRatio: 1.91,
-    borderRadius: 8,
-    backgroundColor: "#f2f2f2",
+    borderRadius: radius[8],
+    backgroundColor: colors.surface,
   },
   link: {
-    fontSize: 13,
-    color: "#3A6EA5",
+    fontSize: fontSize[13],
+    color: colors.link,
   },
   empty: {
     textAlign: "center",
-    color: "#999",
-    marginTop: 32,
+    color: colors.textMuted,
+    marginTop: space[32],
   },
 });

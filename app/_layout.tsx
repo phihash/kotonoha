@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, Stack } from "expo-router";
+import { Pressable } from "react-native";
 import { ShareIntentProvider } from "expo-share-intent";
 import "../storage/analytics";
 import { getUser } from "../storage/auth";
+import { colors } from "../components/theme";
 
 const queryClient = new QueryClient();
 
@@ -12,16 +15,21 @@ function RootStack() {
 
   return (
     <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
-        name="new"
+        name="index"
         options={{
-          headerShown: false,
-          // 見た目とアニメーションは components/Sheet で付ける
-          presentation: "transparentModal",
-          animation: "none",
+          title: "コトノハメモ",
+          headerLeft: () => (
+            <Link href="/settings" asChild>
+              <Pressable hitSlop={10} accessibilityLabel="設定">
+                <Ionicons name="menu" size={24} color={colors.primary} />
+              </Pressable>
+            </Link>
+          ),
         }}
       />
+      {/* 左上のメニューから、ドロワーのように左から出す */}
+      <Stack.Screen name="settings" options={{ title: "設定", animation: "slide_from_left" }} />
       <Stack.Screen name="word" options={{ headerShown: false, presentation: "fullScreenModal" }} />
       {/* サインインは任意（審査 5.1.1(v)）。サインイン済みなら開けない */}
       <Stack.Protected guard={!user}>

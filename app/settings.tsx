@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { track } from "../../storage/analytics";
-import { deleteAccount, getUser, signOut } from "../../storage/auth";
+import { track } from "../storage/analytics";
+import { deleteAccount, getUser, signOut } from "../storage/auth";
+import { colors, space, fontSize } from "../components/theme";
 
 export default function Settings() {
   const queryClient = useQueryClient();
@@ -88,29 +89,29 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
+    padding: space[16],
+    backgroundColor: colors.background,
   },
   group: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "#ccc",
+    borderColor: colors.border,
   },
   spaced: {
-    marginBottom: 32,
+    marginBottom: space[32],
   },
   row: {
-    paddingVertical: 14,
+    paddingVertical: space[14],
   },
   rowBorder: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#ccc",
+    borderTopColor: colors.border,
   },
   rowText: {
-    fontSize: 17,
-    color: "#192543",
+    fontSize: fontSize[17],
+    color: colors.primary,
   },
   danger: {
-    color: "#C0392B",
+    color: colors.danger,
   },
 });
