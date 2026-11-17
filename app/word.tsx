@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { track } from "../storage/analytics";
-import { addMemo, deleteMemo, shareMemo, updateMemo, type Memo } from "../storage/memos";
+import { addMemo, deleteMemo, updateMemo, type Memo } from "../storage/memos";
 import { colors, space, radius, fontSize, lineHeight, fontWeight } from "../components/theme";
 
 // 全画面の入力画面。id があれば編集、なければ新規
@@ -58,14 +58,20 @@ export default function WordScreen() {
         <Pressable style={styles.close} onPress={() => router.back()} accessibilityLabel="閉じる">
           <Ionicons name="close" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{memo ? "編集する" : "メモを書く"}</Text>
-        <Pressable
-          style={[styles.save, !canSave && styles.saveDisabled]}
-          onPress={onSave}
-          disabled={!canSave || save.isPending}
-        >
-          <Text style={[styles.saveText, !canSave && styles.saveTextDisabled]}>保存</Text>
-        </Pressable>
+        <View style={styles.actions}>
+          {memo && (
+            <Pressable style={styles.close} onPress={confirmDelete} disabled={remove.isPending} accessibilityLabel="削除">
+              <Ionicons name="trash-outline" size={22} color={colors.danger} />
+            </Pressable>
+          )}
+          <Pressable
+            style={[styles.save, !canSave && styles.saveDisabled]}
+            onPress={onSave}
+            disabled={!canSave || save.isPending}
+          >
+            <Text style={[styles.saveText, !canSave && styles.saveTextDisabled]}>保存</Text>
+          </Pressable>
+        </View>
       </View>
       <TextInput
         style={styles.word}
@@ -111,16 +117,6 @@ export default function WordScreen() {
           <Text style={styles.addLink}>参照リンクを追加</Text>
         </Pressable>
       )}
-      {memo && (
-        <Pressable style={styles.delete} onPress={() => shareMemo(memo)}>
-          <Text style={styles.shareText}>共有</Text>
-        </Pressable>
-      )}
-      {memo && (
-        <Pressable style={styles.delete} onPress={confirmDelete} disabled={remove.isPending}>
-          <Text style={styles.deleteText}>削除</Text>
-        </Pressable>
-      )}
     </KeyboardAvoidingView>
   );
 }
@@ -146,10 +142,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
   },
-  title: {
-    fontSize: fontSize[17],
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
+  actions: {
+    flexDirection: "row",
+    gap: space[8],
   },
   save: {
     paddingHorizontal: space[20],
@@ -201,17 +196,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize[15],
     paddingVertical: space[12],
     color: colors.primary,
-  },
-  delete: {
-    alignItems: "center",
-    paddingVertical: space[12],
-  },
-  shareText: {
-    color: colors.primary,
-    fontSize: fontSize[16],
-  },
-  deleteText: {
-    color: colors.danger,
-    fontSize: fontSize[16],
   },
 });
